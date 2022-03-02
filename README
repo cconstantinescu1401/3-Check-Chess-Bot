@@ -1,0 +1,176 @@
+PA 3 CHECK CHESS PROJECT
+Team: Looking At The Celing 
+				=> https://github.com/acs-pa/proiect-pa-lookingattheceling.git
+
+
+====== Stage 1 ======
+
+====Compiling instructions====
+make build => create the executable of program
+make run => run the executable
+make clean => delete the executable
+
+To comunicate with xboard run the following command in terminal (Ubuntu)
+=> xboard -fcp "make run" -debug
+
+
+====Structure of project====
+Each .cpp file has a .h. 
+We will add comments to explain what each method do in header files.
+
+Directories
+	1) command_classes = here are stored classes for commander design pattern
+
+	2) pieces_classes = here are stored classes for all pices
+			Class "Piece" (this class is inherited by other classes)
+				Virtual methods:
+				-getType = returns a string that specify the type of a piece
+				-getAvailableMoves = returns a vector of "Position"s 
+				where a piece can move
+				Methods:
+				-move = returns a Position where the Piece will be moved
+				from the list of available moves
+			Class Pawn (inherits class Piece) - implements Pawn object
+			Class Rook (inherits class Piece) - implements Rook object
+			Class Bishop (inherits class Piece) - implements Bishop object
+			Class Knight (inherits class Piece) - implements Knight object
+			Class Queen (inherits class Piece) - implements Queen object
+			Class King (inherits class Piece) - implements King object
+
+Board.cpp =	implements the features of a chess board
+			All pieces are generated here and placed on the board at the initial
+			state of the game. The board is build as a 8 x 8 matrix.
+			We also store pieces in a list. Each piece from the list points to 
+			a piece from the chess board
+
+Game.cpp = 	implements the functionalities of a BOT and includes flags that
+			determines if the game is paused or is running, if the BOT controls
+			the white or the black pieces
+			Here is stored a pointer to a file which we use for debugging
+
+====== Stage 2 ======
+
+Added:
+	- En passant move for pawn
+	- Castling for king and rook (if it is possible to make the Castling
+	move the bot choose this as next move)
+	- Pawn can promote to one of the next pieces Queen, Rook, Knight, Bishop
+	if it reaches the last line of the board
+	- Each piece could make any move (tested and present from stage 1)
+	- If the king is in chess the machine knows to defend and make valid 
+	movements (tested and present from stage 1)
+
+Implementation details for this stage
+	PAWN updates:
+	-> in class pawn was added a flag "twoStepsStart" which specify if the pawn
+	had started with a 2 squares move (this flag resets after the opponent
+	choose his current move)
+	-> pawn checks if around him exists a pawn which could be taken using 
+	en passant move (it verifies if the left or right squares are pawns and
+	if it started with two steps movement)
+	-> pawn can capture an enemy pawn with en passant movements
+	-> pawn now can promote to queen, rook, bishop, knight (promotion is
+	chosen random)
+
+	KING updates:
+	-> in class king was added a flag "hasMoved" set to 0 at init. process
+	-> if the king is moved the flag is set to 1 so the king wont be able to
+	make a castling after it was moved
+	-> king can make a castling in this updates (if a castling is possible then
+	the algorithm will do it)
+
+	ROOK updates:
+	-> in class rook was added a flag "hasMoved" set to 0 at init. process
+	-> if the rook is moved the flag is set to 1 so the king wont be able to
+	make a castling after it was moved
+	
+	To check if the king can make castling without pasing through chess the
+	algorithm use the function used to check if the king is in check on the
+	current position (checking each of the squares between rook and king)
+
+
+====== Stage 3 ======
+
+Added:
+	- 3 check chess rule (if the king is in check three times among the game
+	the player loses the game)
+	- now the algorithm includes a "smart" method to choose the best move, so
+	he will win the game. An important detail that i have to mention is the fact
+	that our algorithm is very agressive, he tries to abuse the 3 check chess rule
+
+Implementation details for this stage
+	- the 3 check chess rule includes a new flag created for king which we use to
+	store the number of times the king enters in check
+	- the algorithm used to make "smarter" moves includes minimax algorithm and
+	alpha beta optimizations. The algorithm minimizing the possible loss for a
+	worst case scenario. Player 1 (Maxi) always tries to maximize his own gains 
+	choosing the best move, while Player 2 (Mini) tries to minimize the gains 
+	of Player 1 with every move. Minimax algorithm builds a tree where the nodes
+	from odd levels contains score calculated for player 1 and even levels represents
+	score calculate for player 2.
+	- to make the minimax algorithm faster (about twice as fast), 
+	we use alpha-beta pruning, which eliminates a large portion of the possible 
+	board states tree. Also, before recursively calling the minimax function, 
+	at every step, we are sorting the all moves vector (the vector which contains 
+	all the possible moves) in decreasing order, by how good they are.
+	- each piece have a weight and a map 8 x 8 where a[i][j] represents the score
+	for placing the piece in that square.
+		Weight of pieces
+			Pawn = 100
+			Rook = 500
+			Knight = 320
+			Bishop = 500
+			Queen = 3000
+			King = 20000
+	- using matrix of each piece we tried to force an opening for the start of the game
+	so the algorithm can be more aggresive and attack the enemy king faster, so he will
+	abuse the 3 check chess rule
+	- the evaluation function includes a bonus every time the algorithm observes that
+	there is a possible move to put the enemy king in chess. The machine is very agressive
+	and if there is a possible to put the enemy king in chess he will sacrifce one of his
+	pieces for the purpose of winning. ("I've won... but at what cost?")
+	- depth of our minimax algorithm is 3.
+	
+
+====Algorithms used====
+We use vectors (stl) instead of static allocated arrays because they are faster
+and frendlier xD
+
+====Source of inspiration====
+We will use for the following video and websites to implement MiniMax algorithm and to
+chose values for matricies and weights. We also used some questions from stack overflow
+https://www.youtube.com/watch?v=STjW3eH0Cik
+https://www.chessprogramming.org/Simplified_Evaluation_Function
+https://www.chessprogramming.org/Main_Page
+https://www.chessprogramming.org/Evaluation_Function_Draft
+https://www.youtube.com/watch?v=hRy6F57u0L0
+https://www.youtube.com/watch?v=l-hh51ncgDI&t=228s
+
+====Contributors====
+Lucian-Mihai Stan => https://github.com/Lucian-MihaiStan
+Sima Radu => https://github.com/RaduSima
+Ciprian Constantinescu => https://github.com/cconstantinescu1401
+
+
+====Responsabilites====
+Sima Radu has implemented the commander design pattern and features of Xboard
+(such as Machine Black, Machine White, Force, Go) 
+Sima fixed bugs related to the available moves of the King which could move in 
+a chess position.
+Stage 2 => Fixing bugs about en passant move
+
+Ciprian Constantinescu has managed two release the first connection with Xboard
+and has implemnted the features of a Pawn including promote to Queen
+Stage 2 => Basic implementation for castling move
+
+Lucian-Mihai Stan has implemented the classes for other pieces and board
+functionalities and initialize process
+Stage 2 => Basic implementation for en passant move for pawn
+
+All of us contributed to minimax algorithm and bugs appeared at the end of the project,
+and we tried to find the best possible values for weight and score matricies so the bot
+will win agains pulsar.
+
+All of us contributed to fixing bugs, illegal moves or crashes
+Stage 2 => All of us contributed to fixing bugs and corner cases for en passant
+and castling movement
